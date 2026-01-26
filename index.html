@@ -88,15 +88,45 @@
             fetchData();
         }
 
-        async function loadOptions() {
-            const { data } = await _supabase.from('dropdown_options').select('*');
-            optionsCache = { network: [], incoterms: [], status: [], staff: [] };
-            data.forEach(opt => { if(optionsCache[opt.category]) optionsCache[opt.category].push(opt.value); });
-            
-            // Fill Select inputs
-            document.getElementById('network_select').innerHTML = optionsCache.network.map(v => `<option value="${v}">${v}</option>`).join('');
-            document.getElementById('incoterms_select').innerHTML = optionsCache.incoterms.map(v => `<option value="${v}">${v}</option>`).join('');
+       async function loadOptions() {
+    console.log("กำลังดึงข้อมูล Dropdown...");
+    const { data, error } = await _supabase.from('dropdown_options').select('*');
+
+    if (error) {
+        console.error("ดึงข้อมูลตัวเลือกผิดพลาด:", error.message);
+        return;
+    }
+
+    if (data) {
+        console.log("ข้อมูลที่ดึงมาได้:", data);
+        
+        // ล้างค่าเก่าใน Cache
+        optionsCache = { network: [], incoterms: [], status: [], staff: [] };
+        
+        // จัดหมวดหมู่ข้อมูล (เช็กให้ตรงกับในตาราง Supabase นะคะ)
+        data.forEach(opt => {
+            if (optionsCache[opt.category] !== undefined) {
+                optionsCache[opt.category].push(opt.value);
+            }
+        });
+
+        // แสดงผลใน Dropdown ของหน้า Add Modal
+        const networkSelect = document.getElementById('network_select');
+        const incotermsSelect = document.getElementById('incoterms_select');
+
+        if (networkSelect) {
+            networkSelect.innerHTML = optionsCache.network.length > 0 
+                ? optionsCache.network.map(v => `<option value="${v}">${v}</option>`).join('')
+                : '<option value="">-- ไม่มีข้อมูล Network --</option>';
         }
+
+        if (incotermsSelect) {
+            incotermsSelect.innerHTML = optionsCache.incoterms.length > 0 
+                ? optionsCache.incoterms.map(v => `<option value="${v}">${v}</option>`).join('')
+                : '<option value="">-- ไม่มีข้อมูล Incoterms --</option>';
+        }
+    }
+}
 
         async function fetchData() {
             const container = document.getElementById('main-content');
@@ -198,13 +228,27 @@
         }
 
         async function addOption() {
-            const cat = document.getElementById('new-opt-cat').value;
-            const val = document.getElementById('new-opt-val').value;
-            if(!val) return;
-            await _supabase.from('dropdown_options').insert([{ category: cat, value: val }]);
-            alert('เพิ่มตัวเลือกเรียบร้อย!');
-            fetchData();
-        }
+    const cat = document.getElementById('new-opt-cat').value; // หมวดหมู่ที่เลือก (network/incoterms/status)
+    const val = document.getElementById('new-opt-val').value; // ค่าที่พิมพ์ลงไป
+    
+    if(!val) {
+        alert("กรุณาพิมพ์ชื่อตัวเลือกก่อนค่ะ");
+        return;
+    }
+
+    const { error } = await _supabase
+        .from('dropdown_options')
+        .insert([{ category: cat, value: val }]);
+
+    if(!error) {
+        alert('เพิ่มตัวเลือก ' + val + ' ในหมวด ' + cat + ' เรียบร้อยค่ะ!');
+        document.getElementById('new-opt-val').value = ''; // ล้างช่องพิมพ์
+        loadOptions(); // โหลด Dropdown ใหม่ทันที
+        fetchData();   // รีเฟรชหน้า Settings
+    } else {
+        alert('บันทึกไม่ได้: ' + error.message);
+    }
+}
 
         function toggleModal(id, show) {
             document.getElementById(id).classList.toggle('hidden', !show);
