@@ -25,11 +25,11 @@
         const SUPABASE_KEY = 'sb_publishable_DVnaODl92bfe_O42F1hM_A_ZYlVGYNh';
         // --------------------------------------------------
 
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function fetchData() {
             // ดึงข้อมูลจากตาราง company_documents (ชื่อต้องตรงกับที่คุณขวัญสร้าง)
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('company_documents')
                 .select('*');
 
