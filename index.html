@@ -3,63 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Company Back-office</title>
+    <title>JET8 Inquiry Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .tab-active { @apply border-b-2 border-blue-600 text-blue-600 font-bold; }
+        .form-input { @apply mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50 p-2 border; }
+    </style>
 </head>
-<body class="bg-gray-50 p-8">
-    <div class="max-w-4xl mx-auto">
+<body class="bg-slate-50 min-h-screen text-slate-800">
+
+    <div class="max-w-7xl mx-auto p-4 md:p-8">
         <header class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-bold text-gray-800">ข้อมูลหลังบ้านบริษัท</h1>
-            <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">ระบบออนไลน์แล้ว</span>
+            <div>
+                <h1 class="text-3xl font-black text-slate-900">JET8 INQUIRY</h1>
+                <p class="text-slate-500 text-sm">Dashboard & Operational Tracking</p>
+            </div>
+            <button onclick="toggleModal('add-modal', true)" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-bold shadow-lg transition">
+                + New Inquiry
+            </button>
         </header>
 
-        <div id="data-container" class="grid gap-4">
-            <p class="text-gray-500">กำลังโหลดข้อมูล...</p>
+        <nav class="flex space-x-8 border-b border-slate-200 mb-8 text-sm uppercase tracking-wider font-semibold">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="pb-4 tab-active">Dashboard</button>
+            <button onclick="switchTab('list')" id="tab-list" class="pb-4 text-slate-400">Inquiry List</button>
+            <button onclick="switchTab('settings')" id="tab-settings" class="pb-4 text-slate-400">Settings</button>
+        </nav>
+
+        <div id="main-content"></div>
+    </div>
+
+    <div id="add-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl">
+            <h2 class="text-xl font-bold mb-6">บันทึกข้อมูล Inquiry ใหม่</h2>
+            <form id="inquiry-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase">Subject Email</label>
+                    <input type="text" id="subject_email" class="form-input" required>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase">Inquiry Date</label>
+                    <input type="date" id="inquiry_date" class="form-input" required>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase">Network</label>
+                    <select id="network_select" class="form-input"></select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase">Incoterms</label>
+                    <select id="incoterms_select" class="form-input"></select>
+                </div>
+                <div class="md:col-span-2 flex justify-end gap-2 mt-6">
+                    <button type="button" onclick="toggleModal('add-modal', false)" class="px-6 py-2 text-slate-400">ยกเลิก</button>
+                    <button type="submit" class="bg-blue-600 text-white px-8 py-2 rounded-lg font-bold">บันทึกข้อมูล</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
-        // --- ส่วนที่ขวัญต้องแก้ไข: ใส่กุญแจที่ก๊อปปี้มาจาก Supabase ---
-        const SUPABASE_URL = 'https://gjrqhwcrsbiixtryglwx.supabase.co';
+        const SUPABASE_URL = 'https://gjrghwcrsbixtryglwx.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_DVnaODl92bfe_O42F1hM_A_ZYlVGYNh';
-        // --------------------------------------------------
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let currentTab = 'dashboard';
+        let optionsCache = { network: [], incoterms: [], status: [], staff: [] };
 
-        async function fetchData() {
-            // ดึงข้อมูลจากตาราง company_documents (ชื่อต้องตรงกับที่คุณขวัญสร้าง)
-            const { data, error } = await supabaseClient
-                .from('company_documents')
-                .select('*');
-
-            const container = document.getElementById('data-container');
-            
-            if (error) {
-                container.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาด: ${error.message}</p>`;
-                return;
-            }
-
-            if (data.length === 0) {
-                container.innerHTML = `<p class="text-gray-500 text-center py-10 bg-white rounded-lg border">ไม่พบข้อมูล หรือข้อมูลถูกล็อกไว้ด้วย RLS</p>`;
-                return;
-            }
-
-            // นำข้อมูลมาสร้างเป็นแผ่นป้าย (Cards) สวยๆ
-            container.innerHTML = data.map(item => `
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition">
-                    <div class="flex justify-between items-start">
-                        <h3 class="font-semibold text-lg text-blue-600">${item.Title}</h3>
-                        ${item.is_confidential ? 
-                            '<span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded">ความลับ</span>' : 
-                            '<span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">ทั่วไป</span>'}
-                    </div>
-                    <p class="text-gray-600 mt-2">${item.Contents || 'ไม่มีรายละเอียด'}</p>
-                    <div class="mt-4 text-sm text-gray-400">แผนก: ${item.Department}</div>
-                </div>
-            `).join('');
+        // Helper: Calculate Day and Week
+        function getDayAndWeek(dateStr) {
+            if (!dateStr) return { day: '-', week: '-' };
+            const d = new Date(dateStr);
+            const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+            const firstDay = new Date(d.getFullYear(), 0, 1);
+            const week = Math.ceil((((d - firstDay) / 86400000) + firstDay.getDay() + 1) / 7);
+            return { day: days[d.getDay()], week: week };
         }
 
+        async function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('tab-active', 'text-blue-600'));
+            document.getElementById('tab-'+tab).classList.add('tab-active', 'text-blue-600');
+            fetchData();
+        }
+
+        async function loadOptions() {
+            const { data } = await _supabase.from('dropdown_options').select('*');
+            optionsCache = { network: [], incoterms: [], status: [], staff: [] };
+            data.forEach(opt => { if(optionsCache[opt.category]) optionsCache[opt.category].push(opt.value); });
+            
+            // Fill Select inputs
+            document.getElementById('network_select').innerHTML = optionsCache.network.map(v => `<option value="${v}">${v}</option>`).join('');
+            document.getElementById('incoterms_select').innerHTML = optionsCache.incoterms.map(v => `<option value="${v}">${v}</option>`).join('');
+        }
+
+        async function fetchData() {
+            const container = document.getElementById('main-content');
+            const { data: inquiryData } = await _supabase.from('inquiry_list').select('*').order('created_at', {ascending: false});
+
+            if (currentTab === 'dashboard') {
+                renderDashboard(inquiryData);
+            } else if (currentTab === 'list') {
+                renderList(inquiryData);
+            } else {
+                renderSettings();
+            }
+        }
+
+        function renderDashboard(data) {
+            const total = data.length;
+            const won = data.filter(i => i.get_the_job === 'Won').length;
+            const pending = data.filter(i => !i.sent).length;
+
+            document.getElementById('main-content').innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-blue-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase">Total Inquiries</p>
+                        <h2 class="text-4xl font-black">${total}</h2>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-yellow-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase">Waiting Quote</p>
+                        <h2 class="text-4xl font-black text-yellow-500">${pending}</h2>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-green-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase">Jobs Won</p>
+                        <h2 class="text-4xl font-black text-green-500">${won}</h2>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderList(data) {
+            document.getElementById('main-content').innerHTML = `
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="p-4 text-xs font-bold text-slate-400 uppercase">Date / Day / Week</th>
+                                <th class="p-4 text-xs font-bold text-slate-400 uppercase">Subject / Network</th>
+                                <th class="p-4 text-xs font-bold text-slate-400 uppercase text-center">Sent</th>
+                                <th class="p-4 text-xs font-bold text-slate-400 uppercase">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(item => {
+                                const info = getDayAndWeek(item.inquiry_date);
+                                return `
+                                <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                                    <td class="p-4">
+                                        <div class="font-semibold text-slate-700">${item.inquiry_date || '-'}</div>
+                                        <div class="text-[10px] text-slate-400 uppercase">${info.day} | Week ${info.week}</div>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="font-bold text-blue-900">${item.subject_email}</div>
+                                        <div class="text-xs text-slate-400">${item.network} | ${item.incoterms}</div>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <input type="checkbox" ${item.sent ? 'checked' : ''} class="w-5 h-5 accent-blue-600 pointer-events-none">
+                                    </td>
+                                    <td class="p-4">
+                                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${item.get_the_job === 'Won' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}">
+                                            ${item.get_the_job || 'Pending'}
+                                        </span>
+                                    </td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderSettings() {
+            document.getElementById('main-content').innerHTML = `
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-bold mb-6">Manage Dropdown Options</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <label class="block text-sm font-bold mb-2">เพิ่มตัวเลือกใหม่</label>
+                            <div class="flex gap-2">
+                                <select id="new-opt-cat" class="form-input w-1/3">
+                                    <option value="network">Network</option>
+                                    <option value="incoterms">Incoterms</option>
+                                    <option value="status">Status</option>
+                                </select>
+                                <input type="text" id="new-opt-val" class="form-input" placeholder="ชื่อตัวเลือก...">
+                                <button onclick="addOption()" class="bg-slate-800 text-white px-4 rounded-md">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function addOption() {
+            const cat = document.getElementById('new-opt-cat').value;
+            const val = document.getElementById('new-opt-val').value;
+            if(!val) return;
+            await _supabase.from('dropdown_options').insert([{ category: cat, value: val }]);
+            alert('เพิ่มตัวเลือกเรียบร้อย!');
+            fetchData();
+        }
+
+        function toggleModal(id, show) {
+            document.getElementById(id).classList.toggle('hidden', !show);
+            if(show) loadOptions();
+        }
+
+        document.getElementById('inquiry-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const payload = {
+                subject_email: document.getElementById('subject_email').value,
+                inquiry_date: document.getElementById('inquiry_date').value,
+                network: document.getElementById('network_select').value,
+                incoterms: document.getElementById('incoterms_select').value
+            };
+            const { error } = await _supabase.from('inquiry_list').insert([payload]);
+            if(!error) {
+                toggleModal('add-modal', false);
+                fetchData();
+            } else { alert(error.message); }
+        };
+
+        // Initial Load
+        loadOptions();
         fetchData();
     </script>
 </body>
