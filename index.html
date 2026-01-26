@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Back-office</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold text-gray-800">ข้อมูลหลังบ้านบริษัท</h1>
+            <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">ระบบออนไลน์แล้ว</span>
+        </header>
+
+        <div id="data-container" class="grid gap-4">
+            <p class="text-gray-500">กำลังโหลดข้อมูล...</p>
+        </div>
+    </div>
+
+    <script>
+        // --- ส่วนที่ขวัญต้องแก้ไข: ใส่กุญแจที่ก๊อปปี้มาจาก Supabase ---
+        const SUPABASE_URL = 'sb_publishable_DVnaODl92bfe_O42F1hM_A_ZYlVGYNh';
+        const SUPABASE_KEY = 'sb_publishable_DVnaODl92bfe_O42F1hM_A_ZYlVGYNh';
+        // --------------------------------------------------
+
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function fetchData() {
+            // ดึงข้อมูลจากตาราง company_documents (ชื่อต้องตรงกับที่คุณขวัญสร้าง)
+            const { data, error } = await supabase
+                .from('company_documents')
+                .select('*');
+
+            const container = document.getElementById('data-container');
+            
+            if (error) {
+                container.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาด: ${error.message}</p>`;
+                return;
+            }
+
+            if (data.length === 0) {
+                container.innerHTML = `<p class="text-gray-500 text-center py-10 bg-white rounded-lg border">ไม่พบข้อมูล หรือข้อมูลถูกล็อกไว้ด้วย RLS</p>`;
+                return;
+            }
+
+            // นำข้อมูลมาสร้างเป็นแผ่นป้าย (Cards) สวยๆ
+            container.innerHTML = data.map(item => `
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition">
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-semibold text-lg text-blue-600">${item.title}</h3>
+                        ${item.is_confidential ? 
+                            '<span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded">ความลับ</span>' : 
+                            '<span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">ทั่วไป</span>'}
+                    </div>
+                    <p class="text-gray-600 mt-2">${item.content || 'ไม่มีรายละเอียด'}</p>
+                    <div class="mt-4 text-sm text-gray-400">แผนก: ${item.department}</div>
+                </div>
+            `).join('');
+        }
+
+        fetchData();
+    </script>
+</body>
+</html>
