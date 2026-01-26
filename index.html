@@ -212,19 +212,32 @@
         }
 
         document.getElementById('inquiry-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const payload = {
-                subject_email: document.getElementById('subject_email').value,
-                inquiry_date: document.getElementById('inquiry_date').value,
-                network: document.getElementById('network_select').value,
-                incoterms: document.getElementById('incoterms_select').value
-            };
-            const { error } = await _supabase.from('inquiry_list').insert([payload]);
-            if(!error) {
-                toggleModal('add-modal', false);
-                fetchData();
-            } else { alert(error.message); }
-        };
+    e.preventDefault();
+    
+    const payload = {
+        // ต้องสะกดตัวเล็กทั้งหมดให้ตรงกับใน Supabase นะคะ
+        subject_email: document.getElementById('subject_email').value, 
+        inquiry_date: document.getElementById('inquiry_date').value,
+        network: document.getElementById('network_select').value,
+        incoterms: document.getElementById('incoterms_select').value
+        // ส่วน id ไม่ต้องใส่ในนี้ค่ะ เพราะ Supabase จะรันเลข 1, 2, 3 ให้เองอัตโนมัติ
+    };
+
+    console.log("กำลังจะส่งข้อมูล:", payload); // เอาไว้เช็กใน Console ว่าค่ามาครบไหม
+
+    const { data, error } = await _supabase
+        .from('inquiry_list')
+        .insert([payload]);
+
+    if(error) {
+        console.error("บันทึกไม่สำเร็จ:", error);
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+    } else {
+        alert('บันทึกข้อมูลเรียบร้อยแล้วค่ะ!');
+        toggleModal('add-modal', false); // ปิดหน้าต่างกรอกข้อมูล
+        fetchData(); // โหลดตารางใหม่มาแสดงผล
+    }
+};
 
         // Initial Load
         loadOptions();
