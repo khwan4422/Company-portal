@@ -90,7 +90,7 @@
 
        async function loadOptions() {
     console.log("กำลังดึงข้อมูล Dropdown...");
-    const { data, error } = await _supabase.from('dropdown_options').select('*');
+    const { data, error } = await _supabase.from('dropdown_option').select('*');
 
     if (error) {
         console.error("ดึงข้อมูลตัวเลือกผิดพลาด:", error.message);
@@ -249,7 +249,7 @@
     }
 
     const { error } = await _supabase
-        .from('dropdown_options')
+        .from('dropdown_option')
         .insert([{ category: cat, value: val }]);
 
     if(!error) {
