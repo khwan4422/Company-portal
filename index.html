@@ -129,28 +129,26 @@
     }
 }
 
-        async function fetchData() {
-    const container = document.getElementById('main-content');
-    
-    // ดึงข้อมูล Inquiry
-    const { data: inquiryData, error } = await _supabase
-        .from('inquiry_list')
-        .select('*')
-        .order('created_at', {ascending: false});
+async function fetchData() {
+    console.log("กำลังเริ่มดึงข้อมูล...");
+    try {
+        const { data, error } = await _supabase
+            .from('inquiry_list')
+            .select('*')
+            .order('created_at', { ascending: false });
 
-    // ตรวจสอบว่ามีข้อมูลส่งกลับมาจริงๆ (ป้องกัน Error ใน Console)
-    if (error || !inquiryData) {
-        console.error("Fetch Error:", error);
-        container.innerHTML = `<p class="p-8 text-red-500">เชื่อมต่อฐานข้อมูลไม่ได้ กรุณาเช็ก URL/Key ค่ะ</p>`;
-        return;
-    }
+        if (error) throw error;
 
-    if (currentTab === 'dashboard') {
-        renderDashboard(inquiryData);
-    } else if (currentTab === 'list') {
-        renderList(inquiryData);
-    } else {
-        renderSettings();
+        console.log("ดึงข้อมูลสำเร็จ:", data);
+
+        if (data) {
+            renderDashboard(data);
+            renderList(data);
+        }
+    } catch (err) {
+        console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", err.message);
+        const content = document.getElementById('list-content');
+        if (content) content.innerHTML = `<p style="color:red;">โหลดข้อมูลไม่สำเร็จ: ${err.message}</p>`;
     }
 }
 
