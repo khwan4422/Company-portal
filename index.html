@@ -134,9 +134,8 @@ async function fetchData() {
     try {
         const { data, error } = await _supabase
             .from('inquiry_list')
-            .select('*')
-            .order('created_at', { ascending: false });
-
+            .select('*');
+            
         if (error) throw error;
 
         console.log("ดึงข้อมูลสำเร็จ:", data);
