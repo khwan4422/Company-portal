@@ -201,11 +201,9 @@ async function fetchData() {
                                         <div class="text-xs text-slate-400">${item.network} | ${item.incoterms}</div>
                                     </td>
                                     <td class="p-4 text-center">
-                                        // ตรงส่วนที่วาด Checkbox Sent
                                         <input type="checkbox" ${item.sent ? 'checked' : ''} 
                                             onchange="handleSentUpdate('${item.id}', this.checked)">
 
-                                        // ตรงส่วนที่อยากให้โชว์วันที่ (เพิ่ม <td> ใหม่)
                                         <td>${item.sent_date ? new Date(item.sent_date).toLocaleDateString() : '-'}</td>
                                         <td>${item.follow_up_1 ? item.follow_up_1 : '-'}</td>
                                     </td>
@@ -311,7 +309,7 @@ async function fetchData() {
     let followUpDate = null;
     if (isChecked) {
         const date = new Date();
-        date.setDate(date.getDate() + 3); // ขวัญเปลี่ยนเลข 3 เป็นจำนวนวันที่ต้องการได้ค่ะ
+        date.setDate(date.getDate() + 3); 
         followUpDate = date.toISOString().split('T')[0]; 
     }
 
