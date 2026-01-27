@@ -201,7 +201,13 @@ async function fetchData() {
                                         <div class="text-xs text-slate-400">${item.network} | ${item.incoterms}</div>
                                     </td>
                                     <td class="p-4 text-center">
-                                        <input type="checkbox" ${item.sent ? 'checked' : ''} class="w-5 h-5 accent-blue-600 pointer-events-none">
+                                        // ตรงส่วนที่วาด Checkbox Sent
+                                        <input type="checkbox" ${item.sent ? 'checked' : ''} 
+                                            onchange="handleSentUpdate('${item.id}', this.checked)">
+
+                                        // ตรงส่วนที่อยากให้โชว์วันที่ (เพิ่ม <td> ใหม่)
+                                        <td>${item.sent_date ? new Date(item.sent_date).toLocaleDateString() : '-'}</td>
+                                        <td>${item.follow_up_1 ? item.follow_up_1 : '-'}</td>
                                     </td>
                                     <td class="p-4">
                                         <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${item.job_status === 'Won' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}">
@@ -297,6 +303,33 @@ async function fetchData() {
         // Initial Load
         loadOptions();
         fetchData();
+
+        async function handleSentUpdate(id, isChecked) {
+    const sentDate = isChecked ? new Date().toISOString() : null;
+    
+    // คำนวณวัน Follow-up 1 (บวกเพิ่ม 3 วันจากวันที่ส่ง)
+    let followUpDate = null;
+    if (isChecked) {
+        const date = new Date();
+        date.setDate(date.getDate() + 3); // ขวัญเปลี่ยนเลข 3 เป็นจำนวนวันที่ต้องการได้ค่ะ
+        followUpDate = date.toISOString().split('T')[0]; 
+    }
+
+    const { error } = await _supabase
+        .from('inquiry_list')
+        .update({ 
+            sent: isChecked, 
+            sent_date: sentDate,
+            follow_up_1: followUpDate 
+        })
+        .eq('id', id);
+
+    if (!error) {
+        fetchData(); // สั่งให้รีเฟรชหน้าจอเพื่อโชว์วันที่ใหม่
+    } else {
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+    }
+}
     </script>
 </body>
 </html>
