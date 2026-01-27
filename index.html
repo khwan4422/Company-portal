@@ -156,10 +156,10 @@
 
         function renderDashboard(data) {
             const total = data.length;
-            const won = data.filter(i => i.get_the_job === 'Won').length;
+            const won = data.filter(i => i.job_status === 'Won').length;
             const pending = data.filter(i => !i.sent).length;
 
-            document.getElementById('main-content').innerHTML = `
+            document.getElementById('dashboard-content').innerHTML = `
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-blue-500">
                         <p class="text-xs font-bold text-slate-400 uppercase">Total Inquiries</p>
@@ -179,7 +179,7 @@
         }
 
         function renderList(data) {
-            document.getElementById('main-content').innerHTML = `
+            document.getElementById('list-content').innerHTML = `
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-slate-50 border-b border-slate-200">
@@ -207,8 +207,8 @@
                                         <input type="checkbox" ${item.sent ? 'checked' : ''} class="w-5 h-5 accent-blue-600 pointer-events-none">
                                     </td>
                                     <td class="p-4">
-                                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${item.get_the_job === 'Won' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}">
-                                            ${item.get_the_job || 'Pending'}
+                                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${item.job_status === 'Won' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}">
+                                            ${item.job_status || 'Pending'}
                                         </span>
                                     </td>
                                 </tr>`;
