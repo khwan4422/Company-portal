@@ -176,50 +176,56 @@ async function fetchData() {
         }
 
         function renderList(data) {
-            document.getElementById('list-content').innerHTML = `
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50 border-b border-slate-200">
-                            <tr>
-                                <th class="p-4 text-xs font-bold text-slate-400 uppercase">Date / Day / Week</th>
-                                <th class="p-4 text-xs font-bold text-slate-400 uppercase">Subject / Network</th>
-                                <th class="p-4 text-xs font-bold text-slate-400 uppercase text-center">Sent</th>
-                                <th class="p-4 text-xs font-bold text-slate-400 uppercase">Status</th>
+    document.getElementById('list-content').innerHTML = `
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th class="p-4 text-xs font-bold text-slate-400 uppercase">Date / Day / Week</th>
+                        <th class="p-4 text-xs font-bold text-slate-400 uppercase">Subject / Network</th>
+                        <th class="p-4 text-xs font-bold text-slate-400 uppercase text-center">Sent</th>
+                        <th class="p-4 text-xs font-bold text-slate-400 uppercase">Sent Date</th>
+                        <th class="p-4 text-xs font-bold text-slate-400 uppercase">Follow-up 1</th>
+                        <th class="p-4 text-xs font-bold text-slate-400 uppercase">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.map(item => {
+                        const info = getDayAndWeek(item.inquiry_date);
+                        return `
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                                <td class="p-4">
+                                    <div class="font-semibold text-slate-700">${item.inquiry_date || '-'}</div>
+                                    <div class="text-[10px] text-slate-400 uppercase">${info.day} | Week ${info.week}</div>
+                                </td>
+                                <td class="p-4">
+                                    <div class="font-bold text-blue-900">${item.subject_email || '-'}</div>
+                                    <div class="text-xs text-slate-500">${item.network} | ${item.incoterms}</div>
+                                </td>
+                                <td class="p-4 text-center">
+                                    <input type="checkbox" ${item.sent ? 'checked' : ''} 
+                                        onchange="handleSentUpdate('${item.id}', this.checked)"
+                                        class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                                </td>
+                                <td class="p-4 text-sm text-slate-600">
+                                    ${item.sent_date ? item.sent_date : '-'}
+                                </td>
+                                <td class="p-4 text-sm font-medium text-orange-600">
+                                    ${item.follow_up_1 ? item.follow_up_1 : '-'}
+                                </td>
+                                <td class="p-4">
+                                    <span class="px-2 py-1 text-[10px] font-bold rounded-full ${item.job_status === 'Won' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}">
+                                        ${item.job_status || 'PENDING'}
+                                    </span>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            ${data.map(item => {
-                                const info = getDayAndWeek(item.inquiry_date);
-                                return `
-                                <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
-                                    <td class="p-4">
-                                        <div class="font-semibold text-slate-700">${item.inquiry_date || '-'}</div>
-                                        <div class="text-[10px] text-slate-400 uppercase">${info.day} | Week ${info.week}</div>
-                                    </td>
-                                    <td class="p-4">
-                                        <div class="font-bold text-blue-900">${item.subject_email}</div>
-                                        <div class="text-xs text-slate-400">${item.network} | ${item.incoterms}</div>
-                                    </td>
-                                    <td class="p-4 text-center">
-                                        <input type="checkbox" ${item.sent ? 'checked' : ''} 
-                                            onchange="handleSentUpdate('${item.id}', this.checked)">
-
-                                        <td>${item.sent_date ? new Date(item.sent_date).toLocaleDateString() : '-'}</td>
-                                        <td>${item.follow_up_1 ? item.follow_up_1 : '-'}</td>
-                                    </td>
-                                    <td class="p-4">
-                                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${item.job_status === 'Won' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}">
-                                            ${item.job_status || 'Pending'}
-                                        </span>
-                                    </td>
-                                </tr>`;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
         function renderSettings() {
             document.getElementById('main-content').innerHTML = `
                 <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
