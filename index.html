@@ -321,27 +321,64 @@ async function fetchData() {
         fetchData();
 
         async function handleSentUpdate(id, isChecked) {
-    const sentDate = isChecked ? new Date().toISOString() : null;
+            const sentDate = isChecked ? new Date().toISOString() : null;
     
-    // คำนวณวัน Follow-up 1 (บวกเพิ่ม 3 วันจากวันที่ส่ง)
-    let followUpDate = null;
-    if (isChecked) {
-        const date = new Date();
-        date.setDate(date.getDate() + 3); 
-        followUpDate = date.toISOString().split('T')[0]; 
+            // คำนวณวัน Follow-up 1 (บวกเพิ่ม 3 วันจากวันที่ส่ง)
+            let followUpDate = null;
+            if (isChecked) {
+            const date = new Date();
+            date.setDate(date.getDate() + 3); 
+            followUpDate = date.toISOString().split('T')[0]; 
     }
 
-    const { error } = await _supabase
-        .from('inquiry_list')
-        .update({ 
-            sent: isChecked, 
-            sent_date: sentDate,
-            follow_up_1: followUpDate 
+            const { error } = await _supabase
+            .from('inquiry_list')
+            .update({ 
+                sent: isChecked, 
+                sent_date: sentDate,
+                follow_up_1: followUpDate 
         })
         .eq('id', id);
 
     if (!error) {
         fetchData(); // สั่งให้รีเฟรชหน้าจอเพื่อโชว์วันที่ใหม่
+    } else {
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+    }
+}
+        async function handleFollowUpUpdate(id, step, isChecked) {
+    if (!isChecked) return; // ถ้าติ๊กออก ไม่ต้องทำอะไร
+
+    // 1. ดึงจำนวนวันที่ขวัญกรอกไว้ในช่อง input
+    const daysToAdd = parseInt(document.getElementById(`days_to_add_${id}_${step}`).value) || 7;
+    
+    // 2. คำนวณวันถัดไป (นับจากวันนี้)
+    const nextDate = new Date();
+    nextDate.setDate(nextDate.getDate() + daysToAdd);
+    const formattedDate = nextDate.toISOString().split('T')[0];
+
+    // 3. กำหนดว่าจะอัปเดตช่องไหน (ถ้าติ๊ก 1 ให้ไปลงวันที่ใน 2)
+    let updateData = {};
+    if (step === 1) {
+        updateData = { 
+            fu_1_done: true, 
+            follow_up_2: formattedDate 
+        };
+    } else if (step === 2) {
+        updateData = { 
+            fu_2_done: true, 
+            follow_up_3: formattedDate 
+        };
+    }
+
+    // 4. ส่งข้อมูลไปที่ Supabase
+    const { error } = await _supabase
+        .from('inquiry_list')
+        .update(updateData)
+        .eq('id', id);
+
+    if (!error) {
+        fetchData(); // รีเฟรชหน้าจอเพื่อโชว์วันที่ใหม่
     } else {
         alert('เกิดข้อผิดพลาด: ' + error.message);
     }
