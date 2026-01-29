@@ -212,7 +212,13 @@ async function fetchData() {
                                     ${item.sent_date ? item.sent_date : '-'}
                                 </td>
                                 <td class="p-4 text-sm font-medium text-orange-600">
-                                    ${item.follow_up_1 ? item.follow_up_1 : '-'}
+                                    ${item.follow_up_1 || '-'}
+                                </td>
+                                <td class="p-4 text-sm font-medium text-orange-600">
+                                    ${item.follow_up_2 || '-'}
+                                </td>
+                                <td class="p-4 text-sm font-medium text-orange-600">
+                                    ${item.follow_up_3 || '-'}
                                 </td>
                                 <td class="p-4">
                                     <span class="px-2 py-1 text-[10px] font-bold rounded-full ${item.job_status === 'Won' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}">
