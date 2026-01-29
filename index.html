@@ -186,6 +186,19 @@ async function fetchData() {
                         <th class="p-4 text-xs font-bold text-slate-400 uppercase text-center">Sent</th>
                         <th class="p-4 text-xs font-bold text-slate-400 uppercase"> Sent Date </th>
                         <th class="p-4 text-xs font-bold text-slate-400 uppercase">Follow-up 1</th>
+                            <td class="p-4 text-sm font-medium text-orange-600">
+                            <div class="flex flex-col gap-1">
+                            <span>${item.follow_up_1 || '-'}</span>
+                            <div class="flex items-center gap-1">
+                            <input type="number" id="days_to_add_${item.id}_1" value="7" 
+                class="w-10 text-[10px] border rounded p-1 text-slate-500" title="จำนวนวันที่จะบวกไปรอบ 2">
+            
+            <input type="checkbox" ${item.fu_1_done ? 'checked' : ''} 
+                onchange="handleFollowUpUpdate('${item.id}', 1, this.checked)"
+                class="w-4 h-4 rounded border-slate-300 text-green-600">
+        </div>
+    </div>
+</td>
                         <th class="p-4 text-xs font-bold text-slate-400 uppercase">Follow-up 2</th>
                         <th class="p-4 text-xs font-bold text-slate-400 uppercase">Follow-up 3</th>
                         <th class="p-4 text-xs font-bold text-slate-400 uppercase">Status</th>
@@ -332,6 +345,36 @@ async function fetchData() {
         fetchData(); // สั่งให้รีเฟรชหน้าจอเพื่อโชว์วันที่ใหม่
     } else {
         alert('เกิดข้อผิดพลาด: ' + error.message);
+    }
+}
+        async function handleFollowUpUpdate(id, step, isChecked) {
+    if (!isChecked) return; // ถ้าติ๊กออก ไม่ต้องทำอะไร
+
+    // 1. ดึงจำนวนวันที่พนักงานกรอกไว้ (ถ้าไม่ได้กรอก ให้ใช้ 7 วันเป็นค่าพื้นฐาน)
+    const daysToAdd = parseInt(document.getElementById(`days_to_add_${id}_${step}`).value) || 7;
+    
+    // 2. คำนวณวันถัดไป
+    const nextDate = new Date();
+    nextDate.setDate(nextDate.getDate() + daysToAdd);
+    const formattedDate = nextDate.toISOString().split('T')[0];
+
+    // 3. เตรียมข้อมูลอัปเดต
+    let updateData = {};
+    if (step === 1) {
+        updateData = { fu_1_done: true, follow_up_2: formattedDate };
+    } else if (step === 2) {
+        updateData = { fu_2_done: true, follow_up_3: formattedDate };
+    }
+
+    // 4. ส่งไปบันทึกที่ Supabase
+    const { error } = await _supabase
+        .from('inquiry_list')
+        .update(updateData)
+        .eq('id', id);
+
+    if (!error) {
+        alert(`บันทึกการติดตามครั้งที่ ${step} แล้ว! ระบบนัดครั้งถัดไปวันที่ ${formattedDate}`);
+        fetchData(); // รีเฟรชหน้าจอ
     }
 }
     </script>
