@@ -361,45 +361,37 @@ async function fetchData() {
         alert('เกิดข้อผิดพลาด: ' + error.message);
     }
 }
-       async function handleFollowUpUpdate(id, step, isChecked, originalDate) {
+async function handleFollowUpUpdate(id, step, isChecked, originalDate) {
     let updateData = {};
-    
-    // กรณี "ติ๊กถูก": ให้คำนวณวันถัดไป
+    const daysToAdd = parseInt(document.getElementById(`days_to_add_${id}_${step}`).value) || 7;
+
     if (isChecked) {
-        // ดึงจำนวนวันที่ขวัญกรอกในช่อง input (ถ้าไม่กรอกให้เป็น 7)
-        const daysToAdd = parseInt(document.getElementById(`days_to_add_${id}_${step}`).value) || 7;
-        
-        // ใช้ originalDate (วันที่นัดหมายรอบนี้) เป็นตัวตั้งต้น
-        // ถ้าค่าเป็น '-' หรือไม่มีค่า ให้ใช้ วันนี้ (new Date()) แทน
         const startDate = originalDate && originalDate !== '-' ? new Date(originalDate) : new Date();
-        
-        // บวกวันเพิ่ม
         startDate.setDate(startDate.getDate() + daysToAdd);
         const formattedDate = startDate.toISOString().split('T')[0];
 
         if (step === 1) {
-            updateData = { fu_1_done: true, follow_up_2: formattedDate };
+            updateData = { 
+                fu_1_done: true, 
+                follow_up_2: formattedDate,
+                fu_1_days: daysToAdd // บันทึกเลขที่ขวัญคีย์ไว้ลงเบส
+            };
         } else if (step === 2) {
-            updateData = { fu_2_done: true, follow_up_3: formattedDate };
+            updateData = { 
+                fu_2_done: true, 
+                follow_up_3: formattedDate,
+                fu_2_days: daysToAdd // บันทึกเลขที่ขวัญคีย์ไว้ลงเบส
+            };
         }
-    } 
-    // กรณี "ติ๊กออก": ให้ล้างข้อมูลรอบถัดไปทิ้ง (ช่วยให้ติ๊กแก้ใหม่ได้)
-    else {
-        if (step === 1) {
-            updateData = { fu_1_done: false, follow_up_2: null };
-        } else if (step === 2) {
-            updateData = { fu_2_done: false, follow_up_3: null };
-        }
+    } else {
+        // กรณีติ๊กออก ก็ให้ล้างข้อมูล
+        if (step === 1) updateData = { fu_1_done: false, follow_up_2: null };
+        if (step === 2) updateData = { fu_2_done: false, follow_up_3: null };
     }
 
-    const { error } = await _supabase
-        .from('inquiry_list')
-        .update(updateData)
-        .eq('id', id);
-
-    if (!error) {
-        fetchData(); // รีเฟรชตารางเพื่อโชว์ผลลัพธ์ใหม่
-    }
+    // ส่งไปบันทึก... (โค้ดส่วนที่เหลือเหมือนเดิมค่ะ)
+    const { error } = await _supabase.from('inquiry_list').update(updateData).eq('id', id);
+    if (!error) fetchData();
 }
     </script>
 </body>
