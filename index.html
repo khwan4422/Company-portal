@@ -359,41 +359,44 @@ async function fetchData() {
         alert('เกิดข้อผิดพลาด: ' + error.message);
     }
 }
-        async function handleFollowUpUpdate(id, step, isChecked) {
-    if (!isChecked) return; // ถ้าติ๊กออก ไม่ต้องทำอะไร
-
-    // 1. ดึงจำนวนวันที่ขวัญกรอกไว้ในช่อง input
-    const daysToAdd = parseInt(document.getElementById(`days_to_add_${id}_${step}`).value) || 7;
-    
-    // 2. คำนวณวันถัดไป (นับจากวันนี้)
-    const nextDate = new Date();
-    nextDate.setDate(nextDate.getDate() + daysToAdd);
-    const formattedDate = nextDate.toISOString().split('T')[0];
-
-    // 3. กำหนดว่าจะอัปเดตช่องไหน (ถ้าติ๊ก 1 ให้ไปลงวันที่ใน 2)
+       async function handleFollowUpUpdate(id, step, isChecked, originalDate) {
     let updateData = {};
-    if (step === 1) {
-        updateData = { 
-            fu_1_done: true, 
-            follow_up_2: formattedDate 
-        };
-    } else if (step === 2) {
-        updateData = { 
-            fu_2_done: true, 
-            follow_up_3: formattedDate 
-        };
+    
+    // กรณี "ติ๊กถูก": ให้คำนวณวันถัดไป
+    if (isChecked) {
+        // ดึงจำนวนวันที่ขวัญกรอกในช่อง input (ถ้าไม่กรอกให้เป็น 7)
+        const daysToAdd = parseInt(document.getElementById(`days_to_add_${id}_${step}`).value) || 7;
+        
+        // ใช้ originalDate (วันที่นัดหมายรอบนี้) เป็นตัวตั้งต้น
+        // ถ้าค่าเป็น '-' หรือไม่มีค่า ให้ใช้ วันนี้ (new Date()) แทน
+        const startDate = originalDate && originalDate !== '-' ? new Date(originalDate) : new Date();
+        
+        // บวกวันเพิ่ม
+        startDate.setDate(startDate.getDate() + daysToAdd);
+        const formattedDate = startDate.toISOString().split('T')[0];
+
+        if (step === 1) {
+            updateData = { fu_1_done: true, follow_up_2: formattedDate };
+        } else if (step === 2) {
+            updateData = { fu_2_done: true, follow_up_3: formattedDate };
+        }
+    } 
+    // กรณี "ติ๊กออก": ให้ล้างข้อมูลรอบถัดไปทิ้ง (ช่วยให้ติ๊กแก้ใหม่ได้)
+    else {
+        if (step === 1) {
+            updateData = { fu_1_done: false, follow_up_2: null };
+        } else if (step === 2) {
+            updateData = { fu_2_done: false, follow_up_3: null };
+        }
     }
 
-    // 4. ส่งข้อมูลไปที่ Supabase
     const { error } = await _supabase
         .from('inquiry_list')
         .update(updateData)
         .eq('id', id);
 
     if (!error) {
-        fetchData(); // รีเฟรชหน้าจอเพื่อโชว์วันที่ใหม่
-    } else {
-        alert('เกิดข้อผิดพลาด: ' + error.message);
+        fetchData(); // รีเฟรชตารางเพื่อโชว์ผลลัพธ์ใหม่
     }
 }
     </script>
