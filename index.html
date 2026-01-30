@@ -214,8 +214,9 @@ async function fetchData() {
                                     <div class="flex flex-col gap-1">
                                         <span>${item.follow_up_1 || '-'}</span>
                                         <div class="flex items-center gap-1">
-                                           <input type="number" id="days_to_add_${item.id}_1" value="7" 
-                                            class="w-10 text-[10px] border rounded p-1 text-slate-500" title="บวกกี่วันสำหรับรอบถัดไป">
+                                           <input type="number" id="days_to_add_${item.id}_1" 
+                                              value="${item.fu_1_days || 7}" 
+                                                class="w-10 text-[10px] border rounded p-1 text-slate-500">
                                             <input type="checkbox" ${item.fu_1_done ? 'checked' : ''} 
                                             onchange="handleFollowUpUpdate('${item.id}', 1, this.checked, '${item.follow_up_1}')"
                                             class="w-4 h-4 rounded border-slate-300 text-green-600 cursor-pointer">
@@ -227,8 +228,9 @@ async function fetchData() {
                                     <div class="flex flex-col gap-1">
                                         <span>${item.follow_up_2 || '-'}</span>
                                         <div class="flex items-center gap-1">
-                                            <input type="number" id="days_to_add_${item.id}_2" value="7" 
-                                                class="w-10 text-[10px] border rounded p-1 text-slate-500">
+                                            <input type="number" id="days_to_add_${item.id}_2" 
+                                                value="${item.fu_2_days || 7}" 
+                                                    class="w-10 text-[10px] border rounded p-1 text-slate-500">
                                            <input type="checkbox" ${item.fu_2_done ? 'checked' : ''} 
                                               onchange="handleFollowUpUpdate('${item.id}', 2, this.checked, '${item.follow_up_2}')"
                                                 class="w-4 h-4 rounded border-slate-300 text-green-600 cursor-pointer">
